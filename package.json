@@ -8,13 +8,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yuko1101/DiscordUtils.git"
+    "url": "git+https://github.com/yuko1101/discord-utils.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/yuko1101/DiscordUtils/issues"
+    "url": "https://github.com/yuko1101/discord-utils/issues"
   },
-  "homepage": "https://github.com/yuko1101/DiscordUtils#readme"
+  "homepage": "https://github.com/yuko1101/discord-utils#readme"
 }
