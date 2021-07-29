@@ -1,4 +1,7 @@
-const Discordrequire
+const Discord = require("discord.js")
+const fs = require("fs")
+const Command = require("./Command")
+const path = require("path")
 
 module.exports = class Client {
     constructor(client, prefixes, debugGuild = undefined) {
@@ -15,6 +18,15 @@ module.exports = class Client {
     /**
      *  @param {command} DiscordUtils.Command
     */
+    async registerCommandsFromDir(dir) {
+        const files = fs.readdirSync(`./${dir}`)
+        for (const file of files) {
+            const loadedFile = fs.lstatSync(`./${dir}/${file}`)
+            if (loadedFile.isDirectory()) loadCommands(`${dir}/${file}`)
+            else this.registerCommand(new Command(require(path.resolve(require.main.path, dir, file))))
+        }
+    }
+
     async registerCommand(command) {
         this.client.commands.set(command.name, command)
         if (command.aliases && command.aliases[0]) command.aliases.forEach(alias => this.client.aliases.set(alias, command))
@@ -28,7 +40,9 @@ module.exports = class Client {
                 const cmd = args.shift().replace(/-debug$/, "")
                 const argsObject = argsToObject(args, command.args)
                 if (command.name && cmd.toLowerCase() !== command.name.toLowerCase()) return
-                return await command.run({ ...msg, slashCommand: false }, argsObject, this.client)
+                const callback = await command.run({ ...msg, slashCommand: false }, argsObject, this.client)
+                if (callback) msg.channel.send(callback)
+                return
             }
         })
         this.client.ws.on('INTERACTION_CREATE', async interaction => {
@@ -90,32 +104,32 @@ module.exports = class Client {
 }
 
 async function registerSlashCommands(client, commands, debugGuild = undefined) {
-    const legacy = await getApplications(client, debugGuild).commands.get()
+    const legacy = (await getApplications(client, debugGuild).commands.get()).filter(c => (debugGuild && c.name.endsWith("-debug")) || (!debugGuild && !c.name.endsWith("-debug")))
     if (legacy[0]) {
         console.log("legacy", legacy)
-        const deletes = legacy.filter(c => !commands.map(cmd => cmd.name).includes(c.name))
+        const deletes = legacy.filter(c => !commands.map(cmd => cmd.name).includes(c.name.replace(/-debug$/, "")))
         for (const deleteCommand of deletes) {
             getApplications(client, debugGuild).commands(deleteCommand.id).delete()
 
         }
-        const availables = legacy.filter(c => commands.map(cmd => cmd.name).includes(c.name))
-        const updates = availables.filter(c => !objectEquals(c.options, commands.find(cmd => cmd.name === c.name).options))
+        const availables = legacy.filter(c => commands.map(cmd => cmd.name).includes(c.name.replace(/-debug$/, "")))
+        const updates = availables.filter(c => !objectEquals({ description: c.description, options: c.options }, { description: commands.find(cmd => cmd.name === c.name.replace(/-debug$/, "")).description, options: commands.find(cmd => cmd.name === c.name.replace(/-debug$/, "")).options }))
         for (const updateCommand of updates) {
             await getApplications(client, debugGuild).commands(updateCommand.id).delete()
             getApplications(client, debugGuild).commands.post({
                 data: {
-                    name: updateCommand.name,
+                    name: updateCommand.name + (debugGuild ? "-debug" : ""),
                     description: updateCommand.description ? updateCommand.description : "No Description",
                     options: [...(updateCommand.options)]
                 }
             })
         }
         console.log("updates", updates)
-        const news = commands.filter(cmd => !legacy.map(c => c.name).includes(cmd.name))
+        const news = commands.filter(cmd => !legacy.map(c => c.name.replace(/-debug$/, "")).includes(cmd.name))
         for (const newCommand of news) {
             getApplications(client, debugGuild).commands.post({
                 data: {
-                    name: newCommand.name,
+                    name: newCommand.name + (debugGuild ? "-debug" : ""),
                     description: newCommand.description ? newCommand.description : "No Description",
                     options: [...(newCommand.options)]
                 }
@@ -126,7 +140,7 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
         for (const cmd of commands) {
             getApplications(client, debugGuild).commands.post({
                 data: {
-                    name: cmd.name,
+                    name: cmd.name + (debugGuild ? "-debug" : ""),
                     description: cmd.description ? cmd.description : "No Description",
                     options: [...(cmd.options)]
                 }
