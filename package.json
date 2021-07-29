@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/yuko1101/discord-utils/issues"
   },
-  "homepage": "https://github.com/yuko1101/discord-utils#readme"
+  "homepage": "https://github.com/yuko1101/discord-utils#readme",
+  "dependencies": {
+    "discord.js": "^12.5.3"
+  }
 }

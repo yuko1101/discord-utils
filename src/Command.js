@@ -3,6 +3,7 @@ module.exports = class Command {
         this.raw = command
         this.name = command.name
         this.args = Object.prototype.toString.call(command.args) === '[object Array]' ? command.args : []
+        this.options = command.options
         this.run = typeof command.run === "function" ? command.run : (msg, args, client) => {
             console.error(`[DiscordUtils] Command ${this.name}.run is not a function!`)
         }
