@@ -2,17 +2,22 @@ const Discord = require("discord.js")
 const fs = require("fs")
 const Command = require("./Command")
 const path = require("path")
+const Reaction = require("./Reaction")
+const fetch = require("node-fetch")
 
 module.exports = class Client {
-    constructor(client, prefixes, debugGuild = undefined) {
+    constructor(client, prefixes, application_id, debugGuild = undefined) {
         this.client = client
         this.prefixes = prefixes
+        this.application_id = application_id
         this.debugGuild = debugGuild
         this.registeredCommands = []
         this.commandApplied = false
 
         this.client.commands = new Discord.Collection()
         this.client.aliases = new Discord.Collection()
+
+        new Reaction().setup(client)
     }
 
     /**
@@ -41,7 +46,10 @@ module.exports = class Client {
                 const argsObject = argsToObject(args, command.args)
                 if (command.name && cmd.toLowerCase() !== command.name.toLowerCase()) return
                 const callback = await command.run({ ...msg, slashCommand: false }, argsObject, this.client)
-                if (callback) msg.channel.send(callback)
+                if (callback) {
+                    const sent = await msg.channel.send(callback)
+                    if (command.runAfter) command.runAfter({ ...msg, slashCommand: false }, sent, argsObject, this.client)
+                }
                 return
             }
         })
@@ -57,14 +65,11 @@ module.exports = class Client {
                 var command = this.client.commands.get(cmd)
                 if (!command) command = this.client.commands.get(this.client.aliases.get(cmd))
                 if (!command) return
-                const callback = await command.run({ ...interaction, channel: channel }, args, this.client)
+                const callback = await command.run({ ...interaction, channel: channel, slashCommand: true }, args, this.client)
                 if (callback == null) {
                     await this.client.api.interactions(interaction.id, interaction.token).callback.post({
                         data: {
-                            type: 4,
-                            data: {
-                                content: "\u200b"
-                            }
+                            type: 5
                         }
                     })
                     return
@@ -81,6 +86,8 @@ module.exports = class Client {
                         data: data
                     }
                 })
+                if (command.runAfter) command.runAfter({ ...interaction, channel: channel, slashCommand: true }, await getInteractionMessage(this.client, interaction, this.application_id), args, this.client)
+
             }
 
         })
@@ -103,7 +110,19 @@ module.exports = class Client {
     }
 }
 
+const getInteractionMessage = async (client, interaction, application_id) => {
+    const channel = await client.channels.resolve(interaction.channel_id);
+    return await fetch(`https://discord.com/api/v8/webhooks/${application_id}/${interaction.token}/messages/@original`).then(res => res.json()).then(async res => {
+        console.log(res)
+        return await channel.messages.fetch(res.id)
+    })
+};
+
 async function registerSlashCommands(client, commands, debugGuild = undefined) {
+    function debug(...args) {
+        if (debugGuild) console.log(...args)
+    }
+
     const legacy = (await getApplications(client, debugGuild).commands.get()).filter(c => (debugGuild && c.name.endsWith("-debug")) || (!debugGuild && !c.name.endsWith("-debug")))
     if (legacy[0]) {
         console.log("legacy", legacy)
@@ -113,9 +132,9 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
 
         }
         const availables = legacy.filter(c => commands.map(cmd => cmd.name).includes(c.name.replace(/-debug$/, "")))
-        const updates = availables.filter(c => !objectEquals({ description: c.description, options: c.options }, { description: commands.find(cmd => cmd.name === c.name.replace(/-debug$/, "")).description, options: commands.find(cmd => cmd.name === c.name.replace(/-debug$/, "")).options }))
+        const updates = commands.filter(cmd => !objectEquals({ description: cmd.description, options: cmd.options }, { description: availables.find(c => c.name.replace(/-debug$/, "") === cmd.name).description, options: availables.find(c => c.name.replace(/-debug$/, "") === cmd.name).options }))
         for (const updateCommand of updates) {
-            await getApplications(client, debugGuild).commands(updateCommand.id).delete()
+            await getApplications(client, debugGuild).commands(availables.find(c => c.name.replace(/-debug$/, "") === updateCommand.name).id).delete()
             getApplications(client, debugGuild).commands.post({
                 data: {
                     name: updateCommand.name + (debugGuild ? "-debug" : ""),
@@ -124,7 +143,7 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
                 }
             })
         }
-        console.log("updates", updates)
+        debug("updates", updates)
         const news = commands.filter(cmd => !legacy.map(c => c.name.replace(/-debug$/, "")).includes(cmd.name))
         for (const newCommand of news) {
             getApplications(client, debugGuild).commands.post({

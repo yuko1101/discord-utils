@@ -7,6 +7,11 @@ module.exports = class Command {
         this.run = typeof command.run === "function" ? command.run : (msg, args, client) => {
             console.error(`[DiscordUtils] Command ${this.name}.run is not a function!`)
         }
+        this.runAfter = command.runAfter ? (
+            typeof command.runAfter === "function" ? command.runAfter : (msg, args, client) => {
+                console.error(`[DiscordUtils] Command ${this.name}.runAfter is not a function!`)
+            }
+        ) : undefined
 
     }
 
