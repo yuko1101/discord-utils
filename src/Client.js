@@ -3,7 +3,9 @@ const fs = require("fs")
 const Command = require("./Command")
 const path = require("path")
 const Reaction = require("./Reaction")
-const fetch = require("node-fetch")
+const Handler = require("./handlers/Handler")
+
+const eventHandler = new Map()
 
 module.exports = class Client {
     constructor(client, prefixes, application_id, debugGuild = undefined) {
@@ -18,6 +20,8 @@ module.exports = class Client {
         this.client.aliases = new Discord.Collection()
 
         new Reaction().setup(client)
+        Handler.slashCommand(this)
+        Handler.messageCommand(this)
     }
 
     /**
@@ -36,62 +40,9 @@ module.exports = class Client {
         this.client.commands.set(command.name, command)
         if (command.aliases && command.aliases[0]) command.aliases.forEach(alias => this.client.aliases.set(alias, command))
 
-        this.client.on("message", async msg => {
-            if (msg.author.bot) return
-            for (const prefix of this.prefixes) {
-                if (!msg.content.startsWith(prefix.toLowerCase())) continue
-                const args = msg.content.toLowerCase().replace(prefix.toLowerCase(), "").split(/ +/)
-                if (this.debugMode && !args[0].endsWith("-debug")) return
-                const cmd = args.shift().replace(/-debug$/, "")
-                const argsObject = argsToObject(args, command.args)
-                if (command.name && cmd.toLowerCase() !== command.name.toLowerCase()) return
-                const callback = await command.run({ ...msg, slashCommand: false }, argsObject, this.client)
-                if (callback) {
-                    const sent = await msg.channel.send(callback)
-                    if (command.runAfter) command.runAfter({ ...msg, slashCommand: false }, sent, argsObject, this.client)
-                }
-                return
-            }
-        })
-        this.client.ws.on('INTERACTION_CREATE', async interaction => {
-            if (interaction.type === 2) {
-                if (this.debugGuild && !interaction.data.name.endsWith("-debug")) return
-                this.debug(interaction)
-                const cmd = this.debugGuild ? interaction.data.name.replace(/-debug$/, "").toLowerCase() : interaction.data.name.toLowerCase();
-                const args = {}
-                if (interaction.data.options) interaction.data.options.forEach(arg => args[arg.name] = arg.value);
-                const channel = this.client.channels.cache.find(c => c.id === interaction.channel_id)
-                if (!channel) return
-                var command = this.client.commands.get(cmd)
-                if (!command) command = this.client.commands.get(this.client.aliases.get(cmd))
-                if (!command) return
-                const callback = await command.run({ ...interaction, channel: channel, slashCommand: true }, args, this.client)
-                if (callback == null) {
-                    await this.client.api.interactions(interaction.id, interaction.token).callback.post({
-                        data: {
-                            type: 5
-                        }
-                    })
-                    return
-                }
-                var data = {
-                    content: callback
-                }
-                if (typeof callback === "object") {
-                    data = await createAPIMessage(interaction, callback)
-                }
-                await this.client.api.interactions(interaction.id, interaction.token).callback.post({
-                    data: {
-                        type: 4,
-                        data: data
-                    }
-                })
-                if (command.runAfter) command.runAfter({ ...interaction, channel: channel, slashCommand: true }, await getInteractionMessage(this.client, interaction, this.application_id), args, this.client)
 
-            }
 
-        })
-        if (command.options) this.registeredCommands.push(command)
+        this.registeredCommands.push(command)
 
     }
     async applyCommands() {
@@ -108,15 +59,22 @@ module.exports = class Client {
     debug(...args) {
         if (this.debugGuild) console.log(...args)
     }
+
+    /**
+     * 
+     * @param {string} event
+     * @param {*} callback 
+     */
+
+    on(event, callback) {
+        eventHandler.set(event, [...(eventHandler.get(event) || [])], callback)
+    }
+    emit(event, ...args) {
+        eventHandler.get(event).forEach(fn => fn(...args))
+    }
 }
 
-const getInteractionMessage = async (client, interaction, application_id) => {
-    const channel = await client.channels.resolve(interaction.channel_id);
-    return await fetch(`https://discord.com/api/v8/webhooks/${application_id}/${interaction.token}/messages/@original`).then(res => res.json()).then(async res => {
-        console.log(res)
-        return await channel.messages.fetch(res.id)
-    })
-};
+
 
 async function registerSlashCommands(client, commands, debugGuild = undefined) {
     function debug(...args) {
@@ -132,9 +90,9 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
 
         }
         const availables = legacy.filter(c => commands.map(cmd => cmd.name).includes(c.name.replace(/-debug$/, "")))
-        const updates = commands.filter(cmd => !objectEquals({ description: cmd.description, options: cmd.options }, { description: availables.find(c => c.name.replace(/-debug$/, "") === cmd.name).description, options: availables.find(c => c.name.replace(/-debug$/, "") === cmd.name).options }))
+        const updates = commands.filter(cmd => !objectEquals({ description: cmd.description, options: cmd.options }, { description: availables.find(c => c.name.replace(/-debug$/, "") === cmd.name)?.description, options: availables.find(c => c.name.replace(/-debug$/, "") === cmd.name)?.options }))
         for (const updateCommand of updates) {
-            await getApplications(client, debugGuild).commands(availables.find(c => c.name.replace(/-debug$/, "") === updateCommand.name).id).delete()
+            if (availables.find(c => c.name.replace(/-debug$/, "") === updateCommand.name)?.id) await getApplications(client, debugGuild).commands(availables.find(c => c.name.replace(/-debug$/, "") === updateCommand.name)?.id).delete()
             getApplications(client, debugGuild).commands.post({
                 data: {
                     name: updateCommand.name + (debugGuild ? "-debug" : ""),
@@ -173,32 +131,7 @@ function getApplications(client, debugGuild) {
     return debugGuild ? client.api.applications(client.user.id).guilds(debugGuild) : client.api.applications(client.user.id)
 }
 
-function argsToObject(args, msgArgsOption) {
-    const argObj = {}
-    if (args.length <= msgArgsOption.length) {
-        args.forEach((arg, i, array) => argObj[msgArgsOption[i]] = arg)
-        return argObj
-    } else if (args.length > msgArgsOption.length) {
-        for (var i = 0; i < msgArgsOption.length; i++) {
-            if (i === msgArgsOption.length - 1) {
-                argObj[msgArgsOption[i]] = args.join(" ")
-                break
-            }
-            argObj[msgArgsOption[i]] = args.shift()
-        }
-        return argObj
-    }
-    return argObj
-}
 
-async function createAPIMessage(interaction, content) {
-    const { data, files } = await Discord.APIMessage.create(
-        client.channels.resolve(interaction.channel_id),
-        content
-    ).resolveData().resolveFiles()
-
-    return { ...data, ...files }
-}
 
 function objectEquals(obj1, obj2) {
     function objectSort(obj) {

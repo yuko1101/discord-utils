@@ -15,4 +15,8 @@ module.exports = class Command {
 
     }
 
+    getCommandName(guild_id) {
+        if (guild_id) return this.name + "-debug"; else return this.name
+    }
+
 }

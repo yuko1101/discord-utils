@@ -14,8 +14,12 @@ module.exports = class Reaction {
     }
 
 
-
+    //do not run this twice (once in Client.js)
     setup(client_) {
         client = client_
+        client.on("messageReactionAdd", (reaction, user) => {
+            const msg = reaction.message
+
+        })
     }
 }
