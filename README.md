@@ -55,7 +55,7 @@ module.exports = {
 }
 ```
 
-# Using ReactionHandler (index.js)
+# Using ReactionHandler (index.js) [Optional]
 Reaction Handler is useful when you want to create
 a typical reactionable message
 
