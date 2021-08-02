@@ -11,15 +11,24 @@ module.exports = class Reaction {
             message_id: this.msg,
             message_type: this.type
         })
+        console.log("registered", registered)
     }
 
 
     //do not run this twice (once in Client.js)
-    setup(client_) {
+    setup(client_, utilsClient) {
         client = client_
         client.on("messageReactionAdd", (reaction, user) => {
             const msg = reaction.message
-
+            const founds = registered.filter(m => m.message_id === msg.id)
+            if (!founds[0]) return
+            founds.forEach(m => utilsClient.emit("reactionAdd", m.message_type, reaction, user))
+        })
+        client.on("messageReactionRemove", (reaction, user) => {
+            const msg = reaction.message
+            const founds = registered.filter(m => m.message_id === msg.id)
+            if (!founds[0]) return
+            founds.forEach(m => utilsClient.emit("reactionRemove", m.message_type, reaction, user))
         })
     }
 }

@@ -19,7 +19,7 @@ module.exports = class Client {
         this.client.commands = new Discord.Collection()
         this.client.aliases = new Discord.Collection()
 
-        new Reaction().setup(client)
+        new Reaction().setup(client, this)
         Handler.slashCommand(this)
         Handler.messageCommand(this)
     }
@@ -67,7 +67,11 @@ module.exports = class Client {
      */
 
     on(event, callback) {
-        eventHandler.set(event, [...(eventHandler.get(event) || [])], callback)
+        if (eventHandler.get(event)) {
+            eventHandler.get(event).push(callback)
+        } else {
+            eventHandler.set(event, [callback])
+        }
     }
     emit(event, ...args) {
         eventHandler.get(event).forEach(fn => fn(...args))

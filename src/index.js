@@ -1,4 +1,5 @@
 module.exports = {
     Client: require("./Client"),
-    Command: require("./Command")
+    Command: require("./Command"),
+    Reaction: require("./Reaction")
 }
