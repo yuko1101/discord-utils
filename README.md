@@ -26,6 +26,8 @@ client.login("token"); // Your bot token goes here
 # Adding Commands (commands/reply_command.js)
 
 ``` js
+const { Reaction } = require("discord-utils");
+
 module.exports = {
     name: "reply", //command name
     args: ["reply_text"], //arg names
@@ -38,12 +40,42 @@ module.exports = {
         }
     ],
     run: async (msg, args, client) => {
-        return "replying..." //send message to the channel
+        return "replying..."; //send message to the channel
     },
     runAfter: async (msg, sent, args, client) => {
-        setTimeout(() => {
-            sent.edit(args["reply_text"]) //edit to reply_text
+        setTimeout(asnyc () => {
+            await sent.edit(args["reply_text"]); //edit to reply_text
+            
+            //Optional: ReactionHandler
+            new Reaction(sent, "REPLY_MESSAGE").register(); //register sent message as a reactionable message, message type = "REPLY_MESSAGE"
+            sent.react("✅");
+            
         }, 2000); //edit the message (that you sent in run function) in 2sec
     }
 }
 ```
+
+# Using ReactionHandler (index.js)
+Reaction Handler is useful when you want to create
+a typical reactionable message
+
+```js
+//...
+
+//triggers on someone added a reaction from a message
+UtilsClient.on("reactionAdd", async (message_type, reaction, user) => {
+  //message sent in reply_commands
+  if (message_type === "REPLY_MESSAGE") {
+    reaction.message.edit("reacted!");
+  }
+});
+
+//triggers on someone removed a reaction from a message
+UtilsClient.on("reactionRemove", async (message_type, reaction, user) => {
+  //message sent in reply_commands
+  if (message_type === "REPLY_MESSAGE") {
+    reaction.message.edit("unreacted!");
+  }
+});
+
+//...
