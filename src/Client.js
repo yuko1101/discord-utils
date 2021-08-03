@@ -25,7 +25,7 @@ module.exports = class Client {
     }
 
     /**
-     *  @param {command} DiscordUtils.Command
+     *  @param {Command} DiscordUtils.Command
     */
     async registerCommandsFromDir(dir) {
         const files = fs.readdirSync(`./${dir}`)
@@ -62,7 +62,7 @@ module.exports = class Client {
 
     /**
      * 
-     * @param {string} event
+     * @param {String} event
      * @param {*} callback 
      */
 
@@ -86,48 +86,125 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
     }
 
     const legacy = (await getApplications(client, debugGuild).commands.get()).filter(c => (debugGuild && c.name.endsWith("-debug")) || (!debugGuild && !c.name.endsWith("-debug")))
-    if (legacy[0]) {
-        console.log("legacy", legacy)
-        const deletes = legacy.filter(c => !commands.map(cmd => cmd.name).includes(c.name.replace(/-debug$/, "")))
-        for (const deleteCommand of deletes) {
-            getApplications(client, debugGuild).commands(deleteCommand.id).delete()
 
-        }
-        const availables = legacy.filter(c => commands.map(cmd => cmd.name).includes(c.name.replace(/-debug$/, "")))
-        const updates = commands.filter(cmd => !objectEquals({ description: cmd.description, options: cmd.options }, { description: availables.find(c => c.name.replace(/-debug$/, "") === cmd.name)?.description, options: availables.find(c => c.name.replace(/-debug$/, "") === cmd.name)?.options }))
-        for (const updateCommand of updates) {
-            if (availables.find(c => c.name.replace(/-debug$/, "") === updateCommand.name)?.id) await getApplications(client, debugGuild).commands(availables.find(c => c.name.replace(/-debug$/, "") === updateCommand.name)?.id).delete()
-            getApplications(client, debugGuild).commands.post({
-                data: {
-                    name: updateCommand.name + (debugGuild ? "-debug" : ""),
-                    description: updateCommand.description ? updateCommand.description : "No Description",
-                    options: [...(updateCommand.options)]
-                }
-            })
-        }
-        debug("updates", updates)
-        const news = commands.filter(cmd => !legacy.map(c => c.name.replace(/-debug$/, "")).includes(cmd.name))
-        for (const newCommand of news) {
-            getApplications(client, debugGuild).commands.post({
-                data: {
-                    name: newCommand.name + (debugGuild ? "-debug" : ""),
-                    description: newCommand.description ? newCommand.description : "No Description",
-                    options: [...(newCommand.options)]
-                }
-            })
-        }
-
-    } else if (commands[0]) {
+    //no legacy commands
+    if (!legacy[0]) {
         for (const cmd of commands) {
-            getApplications(client, debugGuild).commands.post({
+            await getApplications(client, debugGuild).commands.post({
                 data: {
-                    name: cmd.name + (debugGuild ? "-debug" : ""),
-                    description: cmd.description ? cmd.description : "No Description",
+                    name: cmd.getCommandName(debugGuild),
+                    description: cmd.getDescription(),
                     options: [...(cmd.options)]
                 }
             })
         }
+        console.log(`Created ${commands.length} commands`)
+        return
     }
+
+    //delete all
+    if (!commands) {
+        for (const c of legacy) {
+            await getApplications(client, debugGuild).commands(c.id).delete()
+        }
+        console.log(`Deleted ${legacy.length} commands`)
+        return
+    }
+
+    const newCommands = commands.filter(cmd => !legacy.map(c => c.name).includes(cmd.getCommandName(debugGuild)))
+    const mergeNewCommands = commands.filter(cmd => legacy.map(c => c.name).includes(cmd.getCommandName(debugGuild)))
+    const mergeLegacyCommands = legacy.filter(c => commands.map(cmd => cmd.getCommandName(debugGuild)).includes(c.name))
+    const deleteCommands = legacy.filter(c => !commands.map(cmd => cmd.getCommandName(debugGuild)).includes(c.name))
+
+    console.log(newCommands, mergeNewCommands, mergeLegacyCommands, deleteCommands)
+    if (newCommands[0]) {
+        for (const cmd of newCommands) {
+            await getApplications(client, debugGuild).commands.post({
+                data: {
+                    name: cmd.getCommandName(debugGuild),
+                    description: cmd.getDescription(),
+                    options: [...(cmd.options)]
+                }
+            })
+        }
+        console.log(`Created ${newCommands.length} commands`)
+        return
+    }
+
+    if (deleteCommands[0]) {
+        for (const c of deleteCommands) {
+            await getApplications(client, debugGuild).commands(c.id).delete()
+        }
+        console.log(`Deleted ${deleteCommands.length} commands`)
+    }
+
+    if (mergeNewCommands[0]) {
+        var nochanges = 0
+        var haschanges = 0
+        for (const cmd of mergeNewCommands) {
+            const legacyCmd = mergeLegacyCommands.find(c => c.name === cmd.getCommandName(debugGuild))
+            if (objectEquals(
+                { /*name: cmd.getCommandName(debugGuild),*/ description: cmd.getDescription(), options: cmd.options || [] },
+                { /*name: legacy.name,*/ description: legacyCmd.description, options: legacyCmd.options || [] }
+            )) {
+                nochanges++
+            } else {
+                await getApplications(client, debugGuild).commands(legacyCmd.id).delete()
+                await getApplications(client, debugGuild).commands.post({
+                    data: {
+                        name: cmd.getCommandName(debugGuild),
+                        description: cmd.getDescription(),
+                        options: [...(cmd.options)]
+                    }
+                })
+                haschanges++
+            }
+        }
+        console.log(`Updated ${haschanges} commands, ${nochanges} commands have no changes`)
+    }
+
+    // if (legacy[0]) {
+    //     console.log("legacy", legacy)
+    //     const deletes = legacy.filter(c => !commands.map(cmd => cmd.name).includes(c.name.replace(/-debug$/, "")))
+    //     for (const deleteCommand of deletes) {
+    //         getApplications(client, debugGuild).commands(deleteCommand.id).delete()
+
+    //     }
+    //     const availables = legacy.filter(c => commands.map(cmd => cmd.name).includes(c.name.replace(/-debug$/, "")))
+    //     const updates = commands.filter(cmd => !objectEquals({ description: cmd.description, options: cmd.options }, { description: availables.find(c => c.name.replace(/-debug$/, "") === cmd.name)?.description, options: availables.find(c => c.name.replace(/-debug$/, "") === cmd.name)?.options }))
+    //     for (const updateCommand of updates) {
+    //         if (availables.find(c => c.name.replace(/-debug$/, "") === updateCommand.name)?.id) await getApplications(client, debugGuild).commands(availables.find(c => c.name.replace(/-debug$/, "") === updateCommand.name)?.id).delete()
+    //         getApplications(client, debugGuild).commands.post({
+    //             data: {
+    //                 name: updateCommand.name + (debugGuild ? "-debug" : ""),
+    //                 description: updateCommand.description ? updateCommand.description : "No Description",
+    //                 options: [...(updateCommand.options)]
+    //             }
+    //         })
+    //     }
+    //     debug("updates", updates)
+    //     const news = commands.filter(cmd => !legacy.map(c => c.name.replace(/-debug$/, "")).includes(cmd.name))
+    //     for (const newCommand of news) {
+    //         getApplications(client, debugGuild).commands.post({
+    //             data: {
+    //                 name: newCommand.name + (debugGuild ? "-debug" : ""),
+    //                 description: newCommand.description ? newCommand.description : "No Description",
+    //                 options: [...(newCommand.options)]
+    //             }
+    //         })
+    //     }
+
+    // } else if (commands[0]) {
+    //     for (const cmd of commands) {
+    //         getApplications(client, debugGuild).commands.post({
+    //             data: {
+    //                 name: cmd.name + (debugGuild ? "-debug" : ""),
+    //                 description: cmd.description ? cmd.description : "No Description",
+    //                 options: [...(cmd.options)]
+    //             }
+    //         })
+    //     }
+    // }
 
 }
 

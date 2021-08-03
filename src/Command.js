@@ -2,6 +2,7 @@ module.exports = class Command {
     constructor(command) {
         this.raw = command
         this.name = command.name
+        this.description = command.description
         this.args = Object.prototype.toString.call(command.args) === '[object Array]' ? command.args : []
         this.options = command.options
         this.run = typeof command.run === "function" ? command.run : (msg, args, client) => {
@@ -15,8 +16,11 @@ module.exports = class Command {
 
     }
 
-    getCommandName(guild_id) {
-        if (guild_id) return this.name + "-debug"; else return this.name
+    getCommandName(guild_id = undefined) {
+        return guild_id ? this.name + "-debug" : this.name
+    }
+    getDescription() {
+        return this.description || "No Description"
     }
 
 }

@@ -37,9 +37,8 @@ module.exports = {
                     content: callback
                 }
                 if (typeof callback === "object") {
-                    data = await createAPIMessage(utilsClient.client, interaction, callback)
+                    data = callback
                 }
-                utilsClient.debug(data)
                 await utilsClient.client.api.interactions(interaction.id, interaction.token).callback.post({
                     data: {
                         type: 4,
@@ -102,13 +101,4 @@ function argsToObject(args, msgArgsOption) {
         return argObj
     }
     return argObj
-}
-
-async function createAPIMessage(client, interaction, content) {
-    const { data, files } = await Discord.APIMessage.create(
-        client.channels.resolve(interaction.channel_id),
-        content
-    ).resolveData().resolveFiles()
-
-    return { ...data, ...files }
 }
