@@ -3,6 +3,8 @@ JavaScript module for a discord bot
 
 ## This module includes
  - Advanced Command Handler (Supporting Slash Commands)
+ - Config File Manager (JSON)
+ - Reaction Handler
 
 ## Setup (index.js)
 Run `npm install yuko1101/discord-utils` in terminal
@@ -24,6 +26,7 @@ client.on("ready", () => {
 client.login("token"); // Your bot token goes here
 ```
 ## Adding Commands (commands/reply_command.js)
+Creating a command file for both a Message Command and a Slash Command
 
 ``` js
 const { Reaction } = require("discord-utils");
