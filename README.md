@@ -12,13 +12,13 @@ const Discord = require("discord.js");
 const client = new Discord.Client();
 
 const utils = require("discord-utils");
-const UtilsClient = new utils.Client(client, ["!", "?"], "your_application_id") // (bot_client, prefixes, application_id)
+const utilsClient = new utils.Client(client, ["!", "?"], "your_application_id") // (bot_client, prefixes, application_id)
 
-UtilsClient.registerCommandsFromDir("commands") //load commands in "commands" folder
+utilsClient.registerCommandsFromDir("commands") //load commands in "commands" folder
 
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
-  UtilsClient.applyCommands() // apply the commands which you registered
+  utilsClient.applyCommands() // apply the commands which you registered
 });
 
 client.login("token"); // Your bot token goes here
@@ -63,7 +63,7 @@ a typical reactionable message
 //...
 
 //triggers on someone added a reaction from a message
-UtilsClient.on("reactionAdd", async (message_type, reaction, user) => {
+utilsClient.on("reactionAdd", async (message_type, reaction, user) => {
   //message sent in reply_commands
   if (message_type === "REPLY_MESSAGE") {
     reaction.message.edit("reacted!");
@@ -71,7 +71,7 @@ UtilsClient.on("reactionAdd", async (message_type, reaction, user) => {
 });
 
 //triggers on someone removed a reaction from a message
-UtilsClient.on("reactionRemove", async (message_type, reaction, user) => {
+utilsClient.on("reactionRemove", async (message_type, reaction, user) => {
   //message sent in reply_commands
   if (message_type === "REPLY_MESSAGE") {
     reaction.message.edit("unreacted!");
