@@ -1,10 +1,10 @@
 # discord-utils
 JavaScript module for a discord bot
 
-# This module includes
+## This module includes
  - Advanced Command Handler (Supporting Slash Commands)
 
-# Setup (index.js)
+## Setup (index.js)
 Run `npm install yuko1101/discord-utils` in terminal
 
 ``` js
@@ -23,7 +23,7 @@ client.on("ready", () => {
 
 client.login("token"); // Your bot token goes here
 ```
-# Adding Commands (commands/reply_command.js)
+## Adding Commands (commands/reply_command.js)
 
 ``` js
 const { Reaction } = require("discord-utils");
@@ -55,7 +55,7 @@ module.exports = {
 }
 ```
 
-# Using ReactionHandler (index.js) [Optional]
+## Using ReactionHandler (index.js) [Optional]
 Reaction Handler is useful when you want to create
 a typical reactionable message
 
