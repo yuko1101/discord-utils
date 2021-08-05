@@ -46,6 +46,24 @@ module.exports = class Pages {
 
         if (!sent) throw new Error("An unknown error occurred while sending the pages message")
 
+        await this.register(sent, user_filter)
+
+        return sent
+    }
+
+    async edit(message, user_filter = undefined) {
+        if (!message) throw new Error("An unknown error occurred while sending the pages message")
+        await message.edit(this.pages[0])
+        await this.register(message, user_filter)
+        return message
+    }
+
+    setup(utilsClient_) {
+        utilsClient = utilsClient_
+
+    }
+
+    async register(sent, user_filter = undefined) {
         await sent.react("◀")
         await sent.react("▶")
 
@@ -65,13 +83,5 @@ module.exports = class Pages {
             }
             reaction.users.remove(user)
         })
-
-        return sent
-    }
-
-    setup(utilsClient_) {
-        utilsClient = utilsClient_
-
     }
 }
-
