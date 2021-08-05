@@ -1,10 +1,12 @@
 # discord-utils
 JavaScript module for a discord bot
 
-# This module includes
+## This module includes
  - Advanced Command Handler (Supporting Slash Commands)
+ - Config File Manager (JSON)
+ - Reaction Handler
 
-# Setup (index.js)
+## Setup (index.js)
 Run `npm install yuko1101/discord-utils` in terminal
 
 ``` js
@@ -12,18 +14,19 @@ const Discord = require("discord.js");
 const client = new Discord.Client();
 
 const utils = require("discord-utils");
-const UtilsClient = new utils.Client(client, ["!", "?"], "your_application_id") // (bot_client, prefixes, application_id)
+const utilsClient = new utils.Client(client, ["!", "?"], "your_application_id") // (bot_client, prefixes, application_id)
 
-UtilsClient.registerCommandsFromDir("commands") //load commands in "commands" folder
+utilsClient.registerCommandsFromDir("commands") //load commands in "commands" folder
 
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
-  UtilsClient.applyCommands() // apply the commands which you registered
+  utilsClient.applyCommands() // apply the commands which you registered
 });
 
 client.login("token"); // Your bot token goes here
 ```
-# Adding Commands (commands/reply_command.js)
+## Adding Commands (commands/reply_command.js)
+Creating a command file for both a Message Command and a Slash Command
 
 ``` js
 const { Reaction } = require("discord-utils");
@@ -55,7 +58,7 @@ module.exports = {
 }
 ```
 
-# Using ReactionHandler (index.js) [Optional]
+## Using ReactionHandler (index.js) [Optional]
 Reaction Handler is useful when you want to create
 a typical reactionable message
 
@@ -63,7 +66,7 @@ a typical reactionable message
 //...
 
 //triggers on someone added a reaction from a message
-UtilsClient.on("reactionAdd", async (message_type, reaction, user) => {
+utilsClient.on("reactionAdd", async (message_type, reaction, user) => {
   //message sent in reply_commands
   if (message_type === "REPLY_MESSAGE") {
     reaction.message.edit("reacted!");
@@ -71,7 +74,7 @@ UtilsClient.on("reactionAdd", async (message_type, reaction, user) => {
 });
 
 //triggers on someone removed a reaction from a message
-UtilsClient.on("reactionRemove", async (message_type, reaction, user) => {
+utilsClient.on("reactionRemove", async (message_type, reaction, user) => {
   //message sent in reply_commands
   if (message_type === "REPLY_MESSAGE") {
     reaction.message.edit("unreacted!");
