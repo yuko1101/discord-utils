@@ -83,3 +83,8 @@ utilsClient.on("reactionRemove", async (message_type, reaction, user) => {
 });
 
 //...
+```
+
+
+## Thanks for
+  - [discord.js](https://github.com/discordjs/discord.js)
