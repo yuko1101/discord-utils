@@ -33,7 +33,7 @@ module.exports = class Client {
         const files = fs.readdirSync(`./${dir}`)
         for (const file of files) {
             const loadedFile = fs.lstatSync(`./${dir}/${file}`)
-            if (loadedFile.isDirectory()) loadCommands(`${dir}/${file}`)
+            if (loadedFile.isDirectory()) this.registerCommandsFromDir(`${dir}/${file}`)
             else this.registerCommand(new Command(require(path.resolve(require.main.path, dir, file))))
         }
     }
