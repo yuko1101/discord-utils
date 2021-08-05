@@ -47,7 +47,7 @@ module.exports = {
         return "replying..."; //send message to the channel
     },
     runAfter: async (msg, sent, args, client) => {
-        setTimeout(asnyc () => {
+        setTimeout(async () => {
             await sent.edit(args["reply_text"]); //edit to reply_text
             
             //Optional: ReactionHandler
