@@ -16,15 +16,17 @@ module.exports = class Reaction {
 
 
     //do not run this twice (once in Client.js)
-    setup(client_, utilsClient) {
-        client = client_
+    setup(utilsClient) {
+        client = utilsClient.client
         client.on("messageReactionAdd", (reaction, user) => {
+            if (user.bot) return
             const msg = reaction.message
             const founds = registered.filter(m => m.message_id === msg.id)
             if (!founds[0]) return
             founds.forEach(m => utilsClient.emit("reactionAdd", m.message_type, reaction, user))
         })
         client.on("messageReactionRemove", (reaction, user) => {
+            if (user.bot) return
             const msg = reaction.message
             const founds = registered.filter(m => m.message_id === msg.id)
             if (!founds[0]) return

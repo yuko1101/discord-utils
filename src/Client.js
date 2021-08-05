@@ -4,6 +4,7 @@ const Command = require("./Command")
 const path = require("path")
 const Reaction = require("./Reaction")
 const Handler = require("./handlers/Handler")
+const Pages = require("./Pages")
 
 const eventHandler = new Map()
 
@@ -19,9 +20,10 @@ module.exports = class Client {
         this.client.commands = new Discord.Collection()
         this.client.aliases = new Discord.Collection()
 
-        new Reaction().setup(client, this)
+        new Reaction().setup(this)
         Handler.slashCommand(this)
         Handler.messageCommand(this)
+        new Pages().setup(this)
     }
 
     /**

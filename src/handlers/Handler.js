@@ -25,7 +25,9 @@ module.exports = {
                 if (!command) return
                 const callback = await command.run({ ...interaction, channel: channel, guild: guild, slashCommand: true }, args, utilsClient.client)
                 utilsClient.debug(callback)
-                if (callback == null) {
+                //if you return null or undefined in Command run function, runAfter won't be triggered
+                if (callback === null) return
+                if (callback === undefined) {
                     await utilsClient.client.api.interactions(interaction.id, interaction.token).callback.post({
                         data: {
                             type: 5
@@ -74,10 +76,11 @@ module.exports = {
                 return
             }
         })
-    }
+    },
+    getInteractionMessage: getInteractionMessage
 }
 
-const getInteractionMessage = async (client, interaction, application_id) => {
+async function getInteractionMessage(client, interaction, application_id) {
     const channel = await client.channels.resolve(interaction.channel_id);
     return await fetch(`https://discord.com/api/v8/webhooks/${application_id}/${interaction.token}/messages/@original`).then(res => res.json()).then(async res => {
         console.log(res)

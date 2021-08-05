@@ -2,5 +2,6 @@ module.exports = {
     Client: require("./Client"),
     Command: require("./Command"),
     Reaction: require("./Reaction"),
-    ConfigFile: require("./ConfigFile")
+    ConfigFile: require("./ConfigFile"),
+    Pages: require("./Pages")
 }
