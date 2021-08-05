@@ -20,7 +20,7 @@ module.exports = class ConfigFile {
                 } catch (e) {
                     throw new Error(e)
                 }
-                if (typeof this.raw !== "object") throw new Error("3You can save only JSON Object in ConfigFile")
+                if (typeof this.raw !== "object") throw new Error("You can save only JSON Object in ConfigFile")
             }
         })
     }
@@ -33,7 +33,7 @@ module.exports = class ConfigFile {
         } catch (e) {
             throw new Error(e)
         }
-        if (typeof this.raw !== "object") throw new Error("2You can save only JSON Object in ConfigFile")
+        if (typeof this.raw !== "object") throw new Error("You can save only JSON Object in ConfigFile")
         return this.raw
     }
 
@@ -42,7 +42,7 @@ module.exports = class ConfigFile {
      */
     set json(data) {
         console.log(typeof data)
-        if (typeof data !== "object") throw new Error("1You can save only JSON Object in ConfigFile")
+        if (typeof data !== "object") throw new Error("You can save only JSON Object in ConfigFile")
         this.updateFile()
         this.raw = data
     }
@@ -57,7 +57,7 @@ module.exports = class ConfigFile {
      */
     set(key, value) {
         if (!this.isReady) throw new Error("ConfigFile is not ready")
-        if (typeof this.json !== "object") throw new Error("4You can save only JSON Object in ConfigFile")
+        if (typeof this.json !== "object") throw new Error("You can save only JSON Object in ConfigFile")
         const keys = key.split(".")
         if (!hasPath(this.json, ...keys)) createPath(this.json, ...keys)
         var data = this.json
@@ -71,6 +71,26 @@ module.exports = class ConfigFile {
         }
 
         this.updateFile()
+    }
+
+    /**
+     * @param {String} key 
+     * @param {*} default_value
+     */
+    get(key, default_value) {
+        if (!this.isReady) throw new Error("ConfigFile is not ready")
+        if (typeof this.json !== "object") throw new Error("You can save only JSON Object in ConfigFile")
+        const keys = key.split(".")
+        if (!hasPath(this.json, ...keys)) return default_value
+        var data = this.json
+        for (var i = 0; i < keys.length; i++) {
+            if (i !== keys.length - 1) {
+                data = data[keys[i]]
+            } else {
+                return data[keys[i]]
+            }
+
+        }
     }
 
     updateFile() {
