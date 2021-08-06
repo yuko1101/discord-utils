@@ -40,7 +40,7 @@ module.exports = class Client {
 
     async registerCommand(command) {
         this.client.commands.set(command.name, command)
-        if (command.aliases && command.aliases[0]) command.aliases.forEach(alias => this.client.aliases.set(alias, command))
+        if (command.aliases && command.aliases[0]) command.aliases.forEach(alias => this.client.aliases.set(alias, command.name))
 
 
 

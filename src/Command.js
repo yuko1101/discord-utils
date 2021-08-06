@@ -2,6 +2,7 @@ module.exports = class Command {
     constructor(command) {
         this.raw = command
         this.name = command.name
+        this.aliases = command.aliases
         this.description = command.description
         this.args = Object.prototype.toString.call(command.args) === '[object Array]' ? command.args : []
         this.options = command.options

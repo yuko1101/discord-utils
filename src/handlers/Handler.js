@@ -67,7 +67,6 @@ module.exports = {
                 if (!command) return
 
                 const argsObject = argsToObject(args, command.args)
-                if (command.name && cmd.toLowerCase() !== command.name.toLowerCase()) return
                 const callback = await command.run({ ...msg, slashCommand: false }, argsObject, utilsClient.client)
                 if (callback) {
                     const sent = await msg.channel.send(callback)
