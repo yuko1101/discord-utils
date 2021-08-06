@@ -3,5 +3,6 @@ module.exports = {
     Command: require("./Command"),
     Reaction: require("./Reaction"),
     ConfigFile: require("./ConfigFile"),
-    Pages: require("./Pages")
+    Pages: require("./Pages"),
+    CustomEmoji: require("./CustomEmoji")
 }
