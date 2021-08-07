@@ -28,7 +28,7 @@ module.exports = class Client {
     }
 
     /**
-     *  @param {Command} DiscordUtils.Command
+     *  @param {String} dir
     */
     async registerCommandsFromDir(dir) {
         const files = fs.readdirSync(`./${dir}`)
@@ -39,7 +39,14 @@ module.exports = class Client {
         }
     }
 
+    /**
+     * @param {Command} command 
+     */
     async registerCommand(command) {
+        if (!this.debugGuild && command.testing) {
+            console.log(`[Discord Utils] skipped loading ${command.name} command (Testing Command)`)
+            return
+        }
         this.client.commands.set(command.name, command)
         if (command.aliases && command.aliases[0]) command.aliases.forEach(alias => this.client.aliases.set(alias, command.name))
 
@@ -85,9 +92,6 @@ module.exports = class Client {
 
 
 async function registerSlashCommands(client, commands, debugGuild = undefined) {
-    function debug(...args) {
-        if (debugGuild) console.log(...args)
-    }
 
     const legacy = (await getApplications(client, debugGuild).commands.get()).filter(c => (debugGuild && c.name.endsWith("-debug")) || (!debugGuild && !c.name.endsWith("-debug")))
 
