@@ -1,5 +1,5 @@
 # discord-utils
-JavaScript module for a discord bot
+JavaScript module for a discord bot (Supported discord.js v13)
 
 ## This module includes
  - Advanced Command Handler (Supporting Slash Commands)
@@ -11,17 +11,20 @@ JavaScript module for a discord bot
 Run `npm install yuko1101/discord-utils` in terminal
 
 ``` js
-const Discord = require("discord.js");
-const client = new Discord.Client();
+const { Client, Intents } = require("discord.js");
+const client = new Discord.Client({
+    partials: ["CHANNEL", "GUILD_MEMBER", "MESSAGE", "REACTION", "USER"],
+    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS]
+});
 
 const utils = require("discord-utils");
-const utilsClient = new utils.Client(client, ["!", "?"], "your_application_id") // (bot_client, prefixes, application_id)
+const utilsClient = new utils.Client(client, ["!", "?"]); // (bot_client, prefixes, debug_guild_id?)
 
 utilsClient.registerCommandsFromDir("commands") //load commands in "commands" folder
 
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
-  utilsClient.applyCommands() // apply the commands which you registered
+  utilsClient.applyCommands(); // apply the commands which you registered
 });
 
 client.login("token"); // Your bot token goes here
@@ -44,11 +47,11 @@ module.exports = {
         }
     ],
     run: async (msg, args, client) => {
-        return "replying..."; //send message to the channel
+        return { content: "replying..." }; //send message to the channel
     },
     runAfter: async (msg, sent, args, client) => {
         setTimeout(async () => {
-            await sent.edit(args["reply_text"]); //edit to reply_text
+            await sent.edit({ content: args["reply_text"] }); //edit to reply_text
             
             //Optional: ReactionHandler
             new Reaction(sent, "REPLY_MESSAGE").register(); //register sent message as a reactionable message, message type = "REPLY_MESSAGE"
@@ -70,7 +73,7 @@ a typical reactionable message
 utilsClient.on("reactionAdd", async (message_type, reaction, user) => {
   //message sent in reply_commands
   if (message_type === "REPLY_MESSAGE") {
-    reaction.message.edit("reacted!");
+    reaction.message.edit({ content: "reacted!" });
   }
 });
 
@@ -78,7 +81,7 @@ utilsClient.on("reactionAdd", async (message_type, reaction, user) => {
 utilsClient.on("reactionRemove", async (message_type, reaction, user) => {
   //message sent in reply_commands
   if (message_type === "REPLY_MESSAGE") {
-    reaction.message.edit("unreacted!");
+    reaction.message.edit({ content: "unreacted!" });
   }
 });
 

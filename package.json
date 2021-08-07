@@ -18,6 +18,6 @@
   },
   "homepage": "https://github.com/yuko1101/discord-utils#readme",
   "dependencies": {
-    "discord.js": "^12.5.3"
+    "discord.js": "^13.0.0"
   }
 }

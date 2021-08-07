@@ -9,10 +9,11 @@ const Pages = require("./Pages")
 const eventHandler = new Map()
 
 module.exports = class Client {
-    constructor(client, prefixes, application_id, debugGuild = undefined) {
+    constructor(client, prefixes, debugGuild = undefined) {
         this.client = client
         this.prefixes = prefixes
-        this.application_id = application_id
+        this.application_id = client.isReady ? client.application?.id : undefined
+        client.once("ready", () => { this.application_id = client.application.id })
         this.debugGuild = debugGuild
         this.registeredCommands = []
         this.commandApplied = false
@@ -48,9 +49,10 @@ module.exports = class Client {
 
     }
     async applyCommands() {
+        if (this.client.isReady && this.application_id == undefined) this.application_id = this.client.application.id
         if (this.commandApplied) return console.warn("[Discord Utils] Commands have already applied!")
         this.commandApplied = true
-        if (this.client.readyTimestamp && this.client.readyTimestamp <= Date.now()) {
+        if (this.client.isReady) {
             registerSlashCommands(this.client, this.registeredCommands, this.debugGuild ? this.debugGuild : undefined)
         } else {
             this.client.on("ready", () => {

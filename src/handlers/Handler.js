@@ -54,7 +54,7 @@ module.exports = {
         })
     },
     messageCommand: (utilsClient) => {
-        utilsClient.client.on("message", async msg => {
+        utilsClient.client.on("messageCreate", async msg => {
             if (msg.author.bot) return
             for (const prefix of utilsClient.prefixes) {
                 if (!msg.content.startsWith(prefix.toLowerCase())) continue

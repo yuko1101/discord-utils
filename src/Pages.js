@@ -9,6 +9,8 @@ const types = [
 
 var utilsClient
 
+const registeredPages = {}
+
 module.exports = class Pages {
     constructor(...pages) {
         this.pages = pages
@@ -33,7 +35,8 @@ module.exports = class Pages {
         if (type === "CHANNEL") {
             sent = await to.send(this.pages[0])
         } else if (type === "MESSAGE") {
-            sent = await to.channel.send(this.pages[0])
+            const channel = to.channel || await utilsClient.client.channels.fetch(to.channelId)
+            sent = await channel.send(this.pages[0])
         } else if (type === "INTERACTION") {
             await utilsClient.client.api.interactions(to.id, to.token).callback.post({
                 data: {
@@ -60,28 +63,31 @@ module.exports = class Pages {
 
     setup(utilsClient_) {
         utilsClient = utilsClient_
+        utilsClient.client.on("messageReactionAdd", async (reaction, user) => {
+            if (!registeredPages[reaction.message.id]) return
+            if (user.bot) return
 
+            const registered = registeredPages[reaction.message.id][0]
+            const user_filter = registeredPages[reaction.message.id][1]["user_filter"]
+            if (user_filter && !(await user_filter(user))) return
+
+            if (reaction.emoji.name === "▶") {
+                registered.currentPage++
+            } else if (reaction.emoji.name === "◀") {
+                registered.currentPage--
+            }
+            if (registered.currentPage < 0 || registered.currentPage > registered.pages.length - 1) registered.currentPage = registered.prePage
+            if (registered.currentPage !== registered.prePage) {
+                reaction.message.edit(registered.pages[registered.currentPage])
+                registered.prePage = registered.currentPage
+            }
+            reaction.users.remove(user)
+        })
     }
 
     async register(sent, user_filter = undefined) {
         await sent.react("◀")
         await sent.react("▶")
-
-        utilsClient.client.on("messageReactionAdd", async (reaction, user) => {
-            if (reaction.message.id !== sent.id) return
-            if (user.bot) return
-            if (user_filter && !(await user_filter(user))) return
-            if (reaction.emoji.name === "▶") {
-                this.currentPage++
-            } else if (reaction.emoji.name === "◀") {
-                this.currentPage--
-            }
-            if (this.currentPage < 0 || this.currentPage > this.pages.length - 1) this.currentPage = this.prePage
-            if (this.currentPage !== this.prePage) {
-                reaction.message.edit(this.pages[this.currentPage])
-                this.prePage = this.currentPage
-            }
-            reaction.users.remove(user)
-        })
+        registeredPages[sent.id] = [this, { user_filter: user_filter }]
     }
 }
