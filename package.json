@@ -1,6 +1,6 @@
 {
-  "name": "@yuko1101/discord-utils",
-  "version": "0.5.0",
+  "name": "discord-utils",
+  "version": "0.5.1",
   "description": "utils for discord.js bot",
   "main": "./src/index.js",
   "scripts": {
