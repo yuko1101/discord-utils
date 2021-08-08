@@ -23,7 +23,8 @@ module.exports = {
                 var command = utilsClient.client.commands.get(cmd)
                 if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd))
                 if (!command) return
-                const callback = await command.run({ ...interaction, channel: channel, guild: guild, slashCommand: true }, args, utilsClient.client)
+                const msg = { ...interaction, channel: channel, guild: guild, author: interaction.member.user, slashCommand: true }
+                const callback = await command.run(msg, args, utilsClient.client)
                 utilsClient.debug(callback)
                 //if you return null or undefined in Command run function, runAfter won't be triggered
                 if (callback === null) return
@@ -47,7 +48,7 @@ module.exports = {
                         data: data
                     }
                 })
-                if (command.runAfter) command.runAfter({ ...interaction, channel: channel, guild: guild, slashCommand: true }, await getInteractionMessage(utilsClient.client, interaction, utilsClient.application_id), args, utilsClient.client)
+                if (command.runAfter) command.runAfter(msg, await getInteractionMessage(utilsClient.client, interaction, utilsClient.application_id), args, utilsClient.client)
 
             }
 
