@@ -1,10 +1,5 @@
 function getKey(key) {
-    const intKey = new Number(key);
-
-    if (!isNaN(intKey))
-        return intKey;
-
-    return key;
+    return key //disabled
 }
 
 module.exports = {
