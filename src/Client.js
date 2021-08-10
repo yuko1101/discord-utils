@@ -151,8 +151,9 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
         var haschanges = 0
         for (const cmd of mergeNewCommands) {
             const legacyCmd = mergeLegacyCommands.find(c => c.name === cmd.getCommandName(debugGuild))
+
             if (objectEquals(
-                { /*name: cmd.getCommandName(debugGuild),*/ description: cmd.getDescription(), options: cmd.options || [] },
+                { /*name: cmd.getCommandName(debugGuild),*/ description: cmd.getDescription(), options: sortOptions(cmd.options || []) },
                 { /*name: legacy.name,*/ description: legacyCmd.description, options: legacyCmd.options || [] }
             )) {
                 nochanges++
@@ -221,6 +222,18 @@ function getApplications(client, debugGuild) {
 }
 
 
+function sortOptions(options) {
+    return options.map(option => {
+        const returnOption = { type: option.type, name: option.name, description: option.description }
+        if (option.required) returnOption.required = true
+        if (option.choices) returnOption.choices = sortChoices(option.choices)
+        return returnOption
+    })
+}
+
+function sortChoices(choices) {
+    return choices.map(choice => { return { name: choice.name, value: choice.value } })
+}
 
 function objectEquals(obj1, obj2) {
     function objectSort(obj) {
