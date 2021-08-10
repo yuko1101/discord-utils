@@ -14,16 +14,16 @@ module.exports = {
                 const args = {}
                 if (interaction.data.options) interaction.data.options.forEach(arg => args[arg.name] = arg.value);
 
-                const channel = utilsClient.client.channels.cache.find(c => c.id === interaction.channel_id)
-                if (!channel) return
-
-                const guild = utilsClient.client.guilds.cache.find(g => g.id === interaction.guild_id)
-                if (!guild) return
-
                 var command = utilsClient.client.commands.get(cmd)
                 if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd))
                 if (!command) return
-                const msg = { ...interaction, channel: channel, guild: guild, author: interaction.member.user, slashCommand: true }
+
+                const msg = interaction
+                msg.slashCommand = true
+                msg.author = interaction.member.user
+                msg.guild = await utilsClient.client.guilds.fetch(interaction.guild_id)
+                msg.channel = await utilsClient.client.channels.fetch(interaction.channel_id)
+
                 const callback = await command.run(msg, args, utilsClient.client)
                 utilsClient.debug(callback)
                 //if you return null or undefined in Command run function, runAfter won't be triggered
@@ -67,11 +67,14 @@ module.exports = {
                 if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd))
                 if (!command) return
 
+                const msgObject = msg
+                msgObject.slashCommand = false
+
                 const argsObject = argsToObject(args, command.args)
-                const callback = await command.run({ ...msg, slashCommand: false }, argsObject, utilsClient.client)
+                const callback = await command.run(msgObject, argsObject, utilsClient.client)
                 if (callback) {
                     const sent = await msg.channel.send(callback)
-                    if (command.runAfter) command.runAfter({ ...msg, slashCommand: false }, sent, argsObject, utilsClient.client)
+                    if (command.runAfter) command.runAfter(msgObject, sent, argsObject, utilsClient.client)
                 }
                 return
             }
