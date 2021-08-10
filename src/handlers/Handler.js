@@ -61,6 +61,7 @@ module.exports = {
                 if (!msg.content.startsWith(prefix.toLowerCase())) continue
                 const args = msg.content.toLowerCase().replace(prefix.toLowerCase(), "").trim().split(/ +/)
                 if (utilsClient.debugGuild && !args[0].endsWith("-debug")) return
+                if (!utilsClient.debugGuild && args[0].endsWith("-debug")) return
                 const cmd = getSimpleCommandName(args.shift())
 
                 var command = utilsClient.client.commands.get(cmd)
