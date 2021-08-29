@@ -37,6 +37,8 @@ module.exports = {
                 }
 
                 if (callback !== undefined) await interaction.reply(data);
+                //if you return ephemeral message in Command run function, runAfter won't be triggered
+                if (callback.ephemeral) return;
                 const interactionMessage = await getInteractionMessage(interaction, utilsClient.application_id);
                 if (callback === undefined) {
                     interactionMessage.edit = async (data) => {
