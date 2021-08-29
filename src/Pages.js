@@ -38,13 +38,8 @@ module.exports = class Pages {
             const channel = to.channel || await utilsClient.client.channels.fetch(to.channelId)
             sent = await channel.send(this.pages[0])
         } else if (type === "INTERACTION") {
-            await utilsClient.client.api.interactions(to.id, to.token).callback.post({
-                data: {
-                    type: 4,
-                    data: this.pages[0]
-                }
-            })
-            sent = await Handler.getInteractionMessage(utilsClient.client, to, utilsClient.application_id)
+            to.reply(this.pages[0]);
+            sent = await Handler.getInteractionMessage(to, utilsClient.application_id)
         }
 
         if (!sent) throw new Error("An unknown error occurred while sending the pages message")

@@ -12,8 +12,8 @@ module.exports = {
                 const cmd = utilsClient.debugGuild ? getSimpleCommandName(interaction.commandName).toLowerCase() : interaction.commandName.toLowerCase();
 
                 const args = {}
-                if (interaction.options) interaction.options.data.forEach(arg => args[arg.name] = arg.value);
-
+                if (interaction.options?.data) interaction.options.data.forEach(arg => args[arg.name] = arg.value);
+                console.log(args)
                 var command = utilsClient.client.commands.get(cmd)
                 if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd))
                 if (!command) return
@@ -24,7 +24,7 @@ module.exports = {
 
                 const callback = await command.run(msg, args, utilsClient.client);
                 utilsClient.debug(callback);
-                //if you return null or undefined in Command run function, runAfter won't be triggered
+                //if you return null in Command run function, runAfter won't be triggered
                 if (callback === null) return;
                 if (callback === undefined) {
                     await interaction.deferReply();
@@ -35,8 +35,10 @@ module.exports = {
                 if (typeof callback === "object") {
                     data = callback
                 }
-                const interactionMessage = await getInteractionMessage(utilsClient.client, interaction, utilsClient.application_id)
-                if (callback !== undefined) await interaction.reply(data); else {
+
+                if (callback !== undefined) await interaction.reply(data);
+                const interactionMessage = await getInteractionMessage(interaction, utilsClient.application_id);
+                if (callback === undefined) {
                     interactionMessage.edit = async (data) => {
                         await interaction.editReply(data);
                     }
@@ -125,7 +127,7 @@ module.exports = {
     getInteractionMessage: getInteractionMessage
 }
 
-async function getInteractionMessage(client, interaction, application_id) {
+async function getInteractionMessage(interaction, application_id) {
     return await fetch(`https://discord.com/api/v8/webhooks/${application_id}/${interaction.token}/messages/@original`).then(res => res.json()).then(async res => {
         console.log(res)
         return await interaction.channel.messages.fetch(res.id)
