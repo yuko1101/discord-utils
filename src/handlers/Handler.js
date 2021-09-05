@@ -7,16 +7,16 @@ module.exports = {
     slashCommand: (utilsClient) => {
         utilsClient.client.on("interactionCreate", async interaction => {
             if (interaction.isCommand()) {
-                if (utilsClient.debugGuild && !interaction.commandName.endsWith("-debug")) return
-                utilsClient.debug(interaction)
+                if (utilsClient.debugGuild && !interaction.commandName.endsWith("-debug")) return;
+                utilsClient.debug(interaction);
                 const cmd = utilsClient.debugGuild ? getSimpleCommandName(interaction.commandName).toLowerCase() : interaction.commandName.toLowerCase();
 
-                const args = {}
+                const args = {};
                 if (interaction.options?.data) interaction.options.data.forEach(arg => args[arg.name] = arg.value);
-                console.log(args)
-                var command = utilsClient.client.commands.get(cmd)
-                if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd))
-                if (!command) return
+                console.log(args);
+                let command = utilsClient.client.commands.get(cmd);
+                if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd));
+                if (!command) return;
 
                 const msg = interaction;
                 msg.slashCommand = true;
@@ -29,16 +29,16 @@ module.exports = {
                 if (callback === undefined) {
                     await interaction.deferReply();
                 }
-                var data = {
+                let data = {
                     content: callback
-                }
+                };
                 if (typeof callback === "object") {
-                    data = callback
+                    data = callback;
                 }
 
                 if (callback !== undefined) await interaction.reply(data);
                 //if you return ephemeral message in Command run function, runAfter won't be triggered
-                if (callback.ephemeral) return;
+                if ((callback || { ephemeral: false }).ephemeral) return;
                 const interactionMessage = await getInteractionMessage(interaction, utilsClient.application_id);
                 if (callback === undefined) {
                     interactionMessage.edit = async (data) => {
@@ -59,7 +59,7 @@ module.exports = {
         //         const args = {}
         //         if (interaction.data.options) interaction.data.options.forEach(arg => args[arg.name] = arg.value);
 
-        //         var command = utilsClient.client.commands.get(cmd)
+        //         let command = utilsClient.client.commands.get(cmd)
         //         if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd))
         //         if (!command) return
 
@@ -81,7 +81,7 @@ module.exports = {
         //             })
         //             return
         //         }
-        //         var data = {
+        //         let data = {
         //             content: callback
         //         }
         //         if (typeof callback === "object") {
@@ -101,28 +101,28 @@ module.exports = {
     },
     messageCommand: (utilsClient) => {
         utilsClient.client.on("messageCreate", async msg => {
-            if (msg.author.bot) return
+            if (msg.author.bot) return;
             for (const prefix of utilsClient.prefixes) {
-                if (!msg.content.startsWith(prefix.toLowerCase())) continue
-                const args = msg.content.toLowerCase().replace(prefix.toLowerCase(), "").trim().split(/ +/)
-                if (utilsClient.debugGuild && !args[0].endsWith("-debug")) return
-                if (!utilsClient.debugGuild && args[0].endsWith("-debug")) return
-                const cmd = getSimpleCommandName(args.shift())
+                if (!msg.content.startsWith(prefix.toLowerCase())) continue;
+                const args = msg.content.toLowerCase().replace(prefix.toLowerCase(), "").trim().split(/ +/);
+                if (utilsClient.debugGuild && !args[0].endsWith("-debug")) return;
+                if (!utilsClient.debugGuild && args[0].endsWith("-debug")) return;
+                const cmd = getSimpleCommandName(args.shift());
 
-                var command = utilsClient.client.commands.get(cmd)
-                if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd))
-                if (!command) return
+                let command = utilsClient.client.commands.get(cmd);
+                if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd));
+                if (!command) return;
 
-                const msgObject = msg
-                msgObject.slashCommand = false
+                const msgObject = msg;
+                msgObject.slashCommand = false;
 
-                const argsObject = argsToObject(args, command.args)
-                const callback = await command.run(msgObject, argsObject, utilsClient.client)
+                const argsObject = argsToObject(args, command.args);
+                const callback = await command.run(msgObject, argsObject, utilsClient.client);
                 if (callback) {
-                    const sent = await msg.channel.send(callback)
-                    if (command.runAfter) command.runAfter(msgObject, sent, argsObject, utilsClient.client)
+                    const sent = await msg.reply(callback);
+                    if (command.runAfter) command.runAfter(msgObject, sent, argsObject, utilsClient.client);
                 }
-                return
+                return;
             }
         })
     },
@@ -131,25 +131,25 @@ module.exports = {
 
 async function getInteractionMessage(interaction, application_id) {
     return await fetch(`https://discord.com/api/v8/webhooks/${application_id}/${interaction.token}/messages/@original`).then(res => res.json()).then(async res => {
-        console.log(res)
-        return await interaction.channel.messages.fetch(res.id)
+        console.log(res);
+        return await interaction.channel.messages.fetch(res.id);
     })
 };
 
 function argsToObject(args, msgArgsOption) {
     const argObj = {}
     if (args.length <= msgArgsOption.length) {
-        args.forEach((arg, i, array) => argObj[msgArgsOption[i]] = arg)
-        return argObj
+        args.forEach((arg, i, array) => argObj[msgArgsOption[i]] = arg);
+        return argObj;
     } else if (args.length > msgArgsOption.length) {
-        for (var i = 0; i < msgArgsOption.length; i++) {
+        for (let i = 0; i < msgArgsOption.length; i++) {
             if (i === msgArgsOption.length - 1) {
-                argObj[msgArgsOption[i]] = args.join(" ")
-                break
+                argObj[msgArgsOption[i]] = args.join(" ");
+                break;
             }
-            argObj[msgArgsOption[i]] = args.shift()
+            argObj[msgArgsOption[i]] = args.shift();
         }
-        return argObj
+        return argObj;
     }
-    return argObj
+    return argObj;
 }
