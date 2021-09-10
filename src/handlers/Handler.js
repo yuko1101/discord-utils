@@ -50,7 +50,6 @@ module.exports = {
                     } catch (error) {
                         console.log(error);
                     }
-                    await interaction.reply(data);
                     console.timeEnd("Command Reply");
                 }
                 //if you return ephemeral message in Command run function, runAfter won't be triggered
