@@ -30,7 +30,11 @@ module.exports = {
                 //if you return null in Command run function, runAfter won't be triggered
                 if (callback === null) return;
                 if (callback === undefined) {
-                    await interaction.deferReply();
+                    try {
+                        await interaction.deferReply();
+                    } catch (error) {
+                        console.log(error);
+                    }
                     console.timeEnd("Command Reply");
                 }
                 let data = {
@@ -41,6 +45,11 @@ module.exports = {
                 }
 
                 if (callback !== undefined) {
+                    try {
+                        await interaction.reply(data);
+                    } catch (error) {
+                        console.log(error);
+                    }
                     await interaction.reply(data);
                     console.timeEnd("Command Reply");
                 }
