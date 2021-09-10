@@ -31,7 +31,7 @@ module.exports = {
                 if (callback === null) return;
                 if (callback === undefined) {
                     await interaction.deferReply();
-                    console.time("Command Reply");
+                    console.timeEnd("Command Reply");
                 }
                 let data = {
                     content: callback
@@ -42,7 +42,7 @@ module.exports = {
 
                 if (callback !== undefined) {
                     await interaction.reply(data);
-                    console.time("Command Reply");
+                    console.timeEnd("Command Reply");
                 }
                 //if you return ephemeral message in Command run function, runAfter won't be triggered
                 if ((callback || { ephemeral: false }).ephemeral) return;
