@@ -35,6 +35,8 @@ module.exports = {
                         await interaction.deferReply();
                     } catch (error) {
                         console.log(error);
+                        await msg.channel.send("コマンドの実行中に不明なエラーが発生しました\nもう一度お試しください");
+                        return;
                     }
                     console.timeEnd("Command Reply");
                 }
@@ -50,6 +52,8 @@ module.exports = {
                         await interaction.reply(data);
                     } catch (error) {
                         console.log(error);
+                        await msg.channel.send("コマンドの実行中に不明なエラーが発生しました\nもう一度お試しください");
+                        return;
                     }
                     console.timeEnd("Command Reply");
                 }
