@@ -22,7 +22,9 @@ module.exports = {
                 msg.slashCommand = true;
                 msg.author = interaction.user;
 
+                console.time("Command.run");
                 const callback = await command.run(msg, args, utilsClient.client);
+                console.timeEnd("Command.run");
                 utilsClient.debug(callback);
                 //if you return null in Command run function, runAfter won't be triggered
                 if (callback === null) return;
