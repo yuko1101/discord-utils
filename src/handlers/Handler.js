@@ -6,6 +6,7 @@ const Discord = require("discord.js")
 module.exports = {
     slashCommand: (utilsClient) => {
         utilsClient.client.on("interactionCreate", async interaction => {
+            console.time("Command Reply");
             if (interaction.isCommand()) {
                 if (utilsClient.debugGuild && !interaction.commandName.endsWith("-debug")) return;
                 utilsClient.debug(interaction);
@@ -22,14 +23,15 @@ module.exports = {
                 msg.slashCommand = true;
                 msg.author = interaction.user;
 
-                const startAt = Date.now();
+                console.time("Command.run");
                 const callback = await command.run(msg, args, utilsClient.client);
-                console.log(`Command.run process ended in ${Date.now() - startAt}ms`);
+                console.timeEnd("Command.run");
                 utilsClient.debug(callback);
                 //if you return null in Command run function, runAfter won't be triggered
                 if (callback === null) return;
                 if (callback === undefined) {
                     await interaction.deferReply();
+                    console.time("Command Reply");
                 }
                 let data = {
                     content: callback
@@ -38,7 +40,10 @@ module.exports = {
                     data = callback;
                 }
 
-                if (callback !== undefined) await interaction.reply(data);
+                if (callback !== undefined) {
+                    await interaction.reply(data);
+                    console.time("Command Reply");
+                }
                 //if you return ephemeral message in Command run function, runAfter won't be triggered
                 if ((callback || { ephemeral: false }).ephemeral) return;
                 const interactionMessage = await getInteractionMessage(interaction, utilsClient.application_id);
