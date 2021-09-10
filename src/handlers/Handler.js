@@ -6,9 +6,10 @@ const Discord = require("discord.js")
 module.exports = {
     slashCommand: (utilsClient) => {
         utilsClient.client.on("interactionCreate", async interaction => {
-            console.time("Command Reply");
             if (interaction.isCommand()) {
                 if (utilsClient.debugGuild && !interaction.commandName.endsWith("-debug")) return;
+                console.time("Command Reply");
+
                 utilsClient.debug(interaction);
                 const cmd = utilsClient.debugGuild ? getSimpleCommandName(interaction.commandName).toLowerCase() : interaction.commandName.toLowerCase();
 
