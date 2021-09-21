@@ -123,11 +123,11 @@ module.exports = {
         utilsClient.client.on("messageCreate", async msg => {
             if (msg.author.bot) return;
             for (const prefix of utilsClient.prefixes) {
-                if (!msg.content.startsWith(prefix.toLowerCase())) continue;
-                const args = msg.content.toLowerCase().replace(prefix.toLowerCase(), "").trim().split(/ +/);
+                if (!msg.content.toLowerCase().startsWith(prefix.toLowerCase())) continue;
+                const args = msg.content.slice(prefix.length).trim().split(/ +/);
                 if (utilsClient.debugGuild && !args[0].endsWith("-debug")) return;
                 if (!utilsClient.debugGuild && args[0].endsWith("-debug")) return;
-                const cmd = getSimpleCommandName(args.shift());
+                const cmd = getSimpleCommandName(args.shift()).toLowerCase();
 
                 let command = utilsClient.client.commands.get(cmd);
                 if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd));
