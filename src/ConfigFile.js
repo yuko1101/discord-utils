@@ -93,13 +93,12 @@ module.exports = class ConfigFile {
         }
     }
 
-    updateFile() {
+    async updateFile() {
         try {
-            fs.writeFile(this.resolevedPath, this.compact ? JSON.stringify(this.raw) : JSON.stringify(this.raw, null, "\t"), (err) => {
-                if (err) throw new Error(err)
-            })
+            fs.writeFileSync(this.resolevedPath, this.compact ? JSON.stringify(this.raw) : JSON.stringify(this.raw, null, "\t"))
         } catch (e) {
             throw new Error(e)
         }
+        return;
     }
 }
