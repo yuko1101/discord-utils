@@ -13,8 +13,7 @@ module.exports = {
                 utilsClient.debug(interaction);
                 const cmd = utilsClient.debugGuild ? getSimpleCommandName(interaction.commandName).toLowerCase() : interaction.commandName.toLowerCase();
 
-                const args = {};
-                if (interaction.options?.data) interaction.options.data.forEach(arg => args[arg.name] = arg.value);
+                const args = optionsToObject(interaction.options?.data);
                 console.log(args);
                 let command = utilsClient.client.commands.get(cmd);
                 if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd));
@@ -172,4 +171,17 @@ function argsToObject(args, msgArgsOption) {
         return argObj;
     }
     return argObj;
+}
+
+function optionsToObject(options) {
+    if (!options) return {};
+    const obj = {}
+    for (const option of options) {
+        if (option.options) {
+            obj[option.name] = optionsToObject(option.options);
+        } else {
+            obj[option.name] = option.value;
+        }
+    }
+    return obj;
 }

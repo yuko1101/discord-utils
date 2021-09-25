@@ -224,7 +224,7 @@ function getApplications(client, debugGuild) {
 
 function sortOptions(options) {
     return options.map(option => {
-        const returnOption = { type: option.type, name: option.name, description: option.description }
+        const returnOption = option.options ? { name: option.name, type: option.type, description: option.description, options: sortOptions(option.options) } : { type: option.type, name: option.name, description: option.description }
         if (option.required) returnOption.required = true
         if (option.choices) returnOption.choices = sortChoices(option.choices)
         return returnOption
