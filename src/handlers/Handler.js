@@ -178,7 +178,7 @@ function optionsToObject(options) {
     const obj = {}
     for (const option of options) {
         if (option.options || option.type === 1) {
-            obj[option.name] = optionsToObject(option.options || []);
+            obj[option.name] = optionsToObject(option.options || []) || {};
         } else {
             obj[option.name] = option.value;
         }
