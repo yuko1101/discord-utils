@@ -177,7 +177,7 @@ function optionsToObject(options) {
     if (!options) return {};
     const obj = {}
     for (const option of options) {
-        if (option.options || option.type === 1) {
+        if (option.options || option.type === "SUB_COMMAND") {
             obj[option.name] = optionsToObject(option.options || []) || {};
         } else {
             obj[option.name] = option.value;
