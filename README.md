@@ -12,7 +12,7 @@ Run `npm install yuko1101/discord-utils` in terminal
 
 ``` js
 const { Client, Intents } = require("discord.js");
-const client = new Discord.Client({
+const client = new Client({
     partials: ["CHANNEL", "GUILD_MEMBER", "MESSAGE", "REACTION", "USER"],
     intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS]
 });
