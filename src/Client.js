@@ -9,12 +9,13 @@ const Pages = require("./Pages")
 const eventHandler = new Map()
 
 module.exports = class Client {
-    constructor(client, prefixes, debugGuild = undefined) {
+    constructor(client, prefixes, guildId = undefined, debugMode = false) {
         this.client = client
         this.prefixes = prefixes
         this.application_id = client.isReady ? client.application?.id : undefined
         client.once("ready", () => { this.application_id = client.application.id })
-        this.debugGuild = debugGuild
+        this.guildId = guildId
+        this.debugMode = debugMode
         this.registeredCommands = []
         this.commandApplied = false
 
@@ -43,7 +44,7 @@ module.exports = class Client {
      * @param {Command} command 
      */
     async registerCommand(command) {
-        if (!this.debugGuild && command.testing) {
+        if (!this.guildId && command.testing) {
             console.log(`[Discord Utils] skipped loading ${command.name} command (Testing Command)`)
             return
         }
@@ -60,15 +61,15 @@ module.exports = class Client {
         if (this.commandApplied) return console.warn("[Discord Utils] Commands have already applied!")
         this.commandApplied = true
         if (this.client.isReady) {
-            registerSlashCommands(this.client, this.registeredCommands, this.debugGuild ? this.debugGuild : undefined)
+            registerSlashCommands(this.client, this.registeredCommands, this.guildId, this.debugMode)
         } else {
             this.client.on("ready", () => {
-                registerSlashCommands(this.client, this.registeredCommands, this.debugGuild ? this.debugGuild : undefined)
+                registerSlashCommands(this.client, this.registeredCommands, this.guildId, this.debugMode)
             })
         }
     }
     debug(...args) {
-        if (this.debugGuild) console.log(...args)
+        if (this.debugMode) console.log(...args)
     }
 
     /**
@@ -91,16 +92,16 @@ module.exports = class Client {
 
 
 
-async function registerSlashCommands(client, commands, debugGuild = undefined) {
+async function registerSlashCommands(client, commands, guildId = undefined, debugMode = false) {
 
-    const legacy = (await getApplications(client, debugGuild).commands.get()).filter(c => (debugGuild && c.name.endsWith("-debug")) || (!debugGuild && !c.name.endsWith("-debug")))
+    const legacy = (await getApplications(client, guildId).commands.get()).filter(c => (debugMode && c.name.endsWith("-debug")) || (!debugMode && !c.name.endsWith("-debug")))
 
     //no legacy commands
     if (!legacy[0]) {
         for (const cmd of commands) {
-            await getApplications(client, debugGuild).commands.post({
+            await getApplications(client, guildId).commands.post({
                 data: {
-                    name: cmd.getCommandName(debugGuild),
+                    name: cmd.getCommandName(debugMode),
                     description: cmd.getDescription(),
                     options: [...(cmd.options)]
                 }
@@ -113,23 +114,23 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
     //delete all
     if (!commands) {
         for (const c of legacy) {
-            await getApplications(client, debugGuild).commands(c.id).delete()
+            await getApplications(client, guildId).commands(c.id).delete()
         }
         console.log(`Deleted ${legacy.length} commands`)
         return
     }
 
-    const newCommands = commands.filter(cmd => !legacy.map(c => c.name).includes(cmd.getCommandName(debugGuild)))
-    const mergeNewCommands = commands.filter(cmd => legacy.map(c => c.name).includes(cmd.getCommandName(debugGuild)))
-    const mergeLegacyCommands = legacy.filter(c => commands.map(cmd => cmd.getCommandName(debugGuild)).includes(c.name))
-    const deleteCommands = legacy.filter(c => !commands.map(cmd => cmd.getCommandName(debugGuild)).includes(c.name))
+    const newCommands = commands.filter(cmd => !legacy.map(c => c.name).includes(cmd.getCommandName(debugMode)))
+    const mergeNewCommands = commands.filter(cmd => legacy.map(c => c.name).includes(cmd.getCommandName(debugMode)))
+    const mergeLegacyCommands = legacy.filter(c => commands.map(cmd => cmd.getCommandName(debugMode)).includes(c.name))
+    const deleteCommands = legacy.filter(c => !commands.map(cmd => cmd.getCommandName(debugMode)).includes(c.name))
 
     console.log(newCommands, mergeNewCommands, mergeLegacyCommands, deleteCommands)
     if (newCommands[0]) {
         for (const cmd of newCommands) {
-            await getApplications(client, debugGuild).commands.post({
+            await getApplications(client, guildId).commands.post({
                 data: {
-                    name: cmd.getCommandName(debugGuild),
+                    name: cmd.getCommandName(debugMode),
                     description: cmd.getDescription(),
                     options: [...(cmd.options)]
                 }
@@ -141,7 +142,7 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
 
     if (deleteCommands[0]) {
         for (const c of deleteCommands) {
-            await getApplications(client, debugGuild).commands(c.id).delete()
+            await getApplications(client, guildId).commands(c.id).delete()
         }
         console.log(`Deleted ${deleteCommands.length} commands`)
     }
@@ -150,18 +151,18 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
         var nochanges = 0
         var haschanges = 0
         for (const cmd of mergeNewCommands) {
-            const legacyCmd = mergeLegacyCommands.find(c => c.name === cmd.getCommandName(debugGuild))
+            const legacyCmd = mergeLegacyCommands.find(c => c.name === cmd.getCommandName(debugMode))
 
             if (objectEquals(
-                { /*name: cmd.getCommandName(debugGuild),*/ description: cmd.getDescription(), options: sortOptions(cmd.options || []) },
+                { /*name: cmd.getCommandName(debugMode),*/ description: cmd.getDescription(), options: sortOptions(cmd.options || []) },
                 { /*name: legacy.name,*/ description: legacyCmd.description, options: legacyCmd.options || [] }
             )) {
                 nochanges++
             } else {
-                await getApplications(client, debugGuild).commands(legacyCmd.id).delete()
-                await getApplications(client, debugGuild).commands.post({
+                await getApplications(client, guildId).commands(legacyCmd.id).delete()
+                await getApplications(client, guildId).commands.post({
                     data: {
-                        name: cmd.getCommandName(debugGuild),
+                        name: cmd.getCommandName(debugMode),
                         description: cmd.getDescription(),
                         options: [...(cmd.options)]
                     }
@@ -176,16 +177,16 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
     //     console.log("legacy", legacy)
     //     const deletes = legacy.filter(c => !commands.map(cmd => cmd.name).includes(c.name.replace(/-debug$/, "")))
     //     for (const deleteCommand of deletes) {
-    //         getApplications(client, debugGuild).commands(deleteCommand.id).delete()
+    //         getApplications(client, guildId).commands(deleteCommand.id).delete()
 
     //     }
     //     const availables = legacy.filter(c => commands.map(cmd => cmd.name).includes(c.name.replace(/-debug$/, "")))
     //     const updates = commands.filter(cmd => !objectEquals({ description: cmd.description, options: cmd.options }, { description: availables.find(c => c.name.replace(/-debug$/, "") === cmd.name)?.description, options: availables.find(c => c.name.replace(/-debug$/, "") === cmd.name)?.options }))
     //     for (const updateCommand of updates) {
-    //         if (availables.find(c => c.name.replace(/-debug$/, "") === updateCommand.name)?.id) await getApplications(client, debugGuild).commands(availables.find(c => c.name.replace(/-debug$/, "") === updateCommand.name)?.id).delete()
-    //         getApplications(client, debugGuild).commands.post({
+    //         if (availables.find(c => c.name.replace(/-debug$/, "") === updateCommand.name)?.id) await getApplications(client, guildId).commands(availables.find(c => c.name.replace(/-debug$/, "") === updateCommand.name)?.id).delete()
+    //         getApplications(client, guildId).commands.post({
     //             data: {
-    //                 name: updateCommand.name + (debugGuild ? "-debug" : ""),
+    //                 name: updateCommand.name + (debugMode ? "-debug" : ""),
     //                 description: updateCommand.description ? updateCommand.description : "No Description",
     //                 options: [...(updateCommand.options)]
     //             }
@@ -194,9 +195,9 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
     //     debug("updates", updates)
     //     const news = commands.filter(cmd => !legacy.map(c => c.name.replace(/-debug$/, "")).includes(cmd.name))
     //     for (const newCommand of news) {
-    //         getApplications(client, debugGuild).commands.post({
+    //         getApplications(client, guildId).commands.post({
     //             data: {
-    //                 name: newCommand.name + (debugGuild ? "-debug" : ""),
+    //                 name: newCommand.name + (debugMode ? "-debug" : ""),
     //                 description: newCommand.description ? newCommand.description : "No Description",
     //                 options: [...(newCommand.options)]
     //             }
@@ -205,9 +206,9 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
 
     // } else if (commands[0]) {
     //     for (const cmd of commands) {
-    //         getApplications(client, debugGuild).commands.post({
+    //         getApplications(client, guildId).commands.post({
     //             data: {
-    //                 name: cmd.name + (debugGuild ? "-debug" : ""),
+    //                 name: cmd.name + (debugMode ? "-debug" : ""),
     //                 description: cmd.description ? cmd.description : "No Description",
     //                 options: [...(cmd.options)]
     //             }
@@ -217,8 +218,8 @@ async function registerSlashCommands(client, commands, debugGuild = undefined) {
 
 }
 
-function getApplications(client, debugGuild) {
-    return debugGuild ? client.api.applications(client.user.id).guilds(debugGuild) : client.api.applications(client.user.id)
+function getApplications(client, guildId) {
+    return guildId ? client.api.applications(client.user.id).guilds(guildId) : client.api.applications(client.user.id)
 }
 
 

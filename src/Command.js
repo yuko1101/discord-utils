@@ -18,8 +18,8 @@ module.exports = class Command {
 
     }
 
-    getCommandName(guild_id = undefined) {
-        return guild_id ? this.name + "-debug" : this.name
+    getCommandName(debugMode = undefined) {
+        return debugMode ? this.name + "-debug" : this.name
     }
     getDescription() {
         return this.description || "No Description"
