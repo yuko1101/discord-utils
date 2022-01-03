@@ -7,11 +7,11 @@ module.exports = {
     slashCommand: (utilsClient) => {
         utilsClient.client.on("interactionCreate", async interaction => {
             if (interaction.isCommand()) {
-                if (utilsClient.debugGuild && !interaction.commandName.endsWith("-debug")) return;
+                if (utilsClient.debugMode && !interaction.commandName.endsWith("-debug")) return;
                 console.time("Command Reply");
 
                 utilsClient.debug(interaction);
-                const cmd = utilsClient.debugGuild ? getSimpleCommandName(interaction.commandName).toLowerCase() : interaction.commandName.toLowerCase();
+                const cmd = utilsClient.debugMode ? getSimpleCommandName(interaction.commandName).toLowerCase() : interaction.commandName.toLowerCase();
 
                 const args = optionsToObject(interaction.options?.data);
                 console.log(args);
@@ -71,9 +71,9 @@ module.exports = {
 
         // utilsClient.client.ws.on('INTERACTION_CREATE', async interaction => {
         //     if (interaction.type === 2) {
-        //         if (utilsClient.debugGuild && !interaction.data.name.endsWith("-debug")) return
+        //         if (utilsClient.debugMode && !interaction.data.name.endsWith("-debug")) return
         //         utilsClient.debug(interaction)
-        //         const cmd = utilsClient.debugGuild ? getSimpleCommandName(interaction.data.name).toLowerCase() : interaction.data.name.toLowerCase();
+        //         const cmd = utilsClient.debugMode ? getSimpleCommandName(interaction.data.name).toLowerCase() : interaction.data.name.toLowerCase();
 
         //         const args = {}
         //         if (interaction.data.options) interaction.data.options.forEach(arg => args[arg.name] = arg.value);
@@ -121,11 +121,12 @@ module.exports = {
     messageCommand: (utilsClient) => {
         utilsClient.client.on("messageCreate", async msg => {
             if (msg.author.bot) return;
+            if (utilsClient.guildId && msg.guild.id !== utilsClient.guildId) return;
             for (const prefix of utilsClient.prefixes) {
                 if (!msg.content.toLowerCase().startsWith(prefix.toLowerCase())) continue;
                 const args = msg.content.slice(prefix.length).trim().split(/ +/);
-                if (utilsClient.debugGuild && !args[0].endsWith("-debug")) return;
-                if (!utilsClient.debugGuild && args[0].endsWith("-debug")) return;
+                if (utilsClient.debugMode && !args[0].endsWith("-debug")) return;
+                if (!utilsClient.debugMode && args[0].endsWith("-debug")) return;
                 const cmd = getSimpleCommandName(args.shift()).toLowerCase();
 
                 let command = utilsClient.client.commands.get(cmd);
