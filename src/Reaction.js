@@ -1,5 +1,5 @@
 const registered = []
-var client;
+var client
 
 module.exports = class Reaction {
     constructor(msg, type = "CUSTOM") {

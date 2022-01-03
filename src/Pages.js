@@ -38,7 +38,7 @@ module.exports = class Pages {
             const channel = to.channel || await utilsClient.client.channels.fetch(to.channelId)
             sent = await channel.send(this.pages[0])
         } else if (type === "INTERACTION") {
-            to.reply(this.pages[0]);
+            to.reply(this.pages[0])
             sent = await Handler.getInteractionMessage(to, utilsClient.application_id)
         }
 

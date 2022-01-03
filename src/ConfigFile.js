@@ -99,6 +99,6 @@ module.exports = class ConfigFile {
         } catch (e) {
             throw new Error(e)
         }
-        return;
+        return
     }
 }

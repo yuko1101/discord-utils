@@ -9,13 +9,16 @@ const Pages = require("./Pages")
 const eventHandler = new Map()
 
 module.exports = class Client {
-    constructor(client, prefixes, guildId = undefined, debugMode = false) {
+    constructor(client, prefixes, guildId = undefined, debugMode = false, disableSlashCommands = false, disableMessageCommands = false) {
         this.client = client
         this.prefixes = prefixes
         this.application_id = client.isReady ? client.application?.id : undefined
         client.once("ready", () => { this.application_id = client.application.id })
         this.guildId = guildId
         this.debugMode = debugMode
+        this.disableSlashCommands = disableSlashCommands
+        this.disableMessageCommands = disableMessageCommands
+
         this.registeredCommands = []
         this.commandApplied = false
 
@@ -60,6 +63,9 @@ module.exports = class Client {
         if (this.client.isReady && this.application_id == undefined) this.application_id = this.client.application.id
         if (this.commandApplied) return console.warn("[Discord Utils] Commands have already applied!")
         this.commandApplied = true
+
+        if (this.disableSlashCommands) return
+
         if (this.client.isReady) {
             registerSlashCommands(this.client, this.registeredCommands, this.guildId, this.debugMode)
         } else {
@@ -240,21 +246,21 @@ function objectEquals(obj1, obj2) {
     function objectSort(obj) {
 
         // ソートする
-        const sorted = Object.entries(obj).sort();
+        const sorted = Object.entries(obj).sort()
 
         // valueを調べ、objectならsorted entriesに変換する
         for (let i in sorted) {
-            const val = sorted[i][1];
+            const val = sorted[i][1]
             if (typeof val === "object") {
-                sorted[i][1] = objectSort(val);
+                sorted[i][1] = objectSort(val)
             }
         }
 
-        return sorted;
+        return sorted
     }
 
-    const json1 = JSON.stringify(objectSort(obj1));
-    const json2 = JSON.stringify(objectSort(obj2));
+    const json1 = JSON.stringify(objectSort(obj1))
+    const json2 = JSON.stringify(objectSort(obj2))
 
     return json1 === json2
 }

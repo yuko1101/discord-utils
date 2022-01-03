@@ -5,44 +5,44 @@ function getKey(key) {
 module.exports = {
     hasPath: (obj, ...keys) => {
         if (obj == null)
-            return false;
+            return false
 
-        let loc = obj;
+        let loc = obj
 
         for (let i = 0; i < keys.length; i++) {
-            loc = loc[getKey(keys[i])];
+            loc = loc[getKey(keys[i])]
 
             if (loc === undefined)
-                return false;
+                return false
         }
 
-        return true;
+        return true
     },
 
     getPath: (obj, ...keys) => {
         if (obj == null)
-            return undefined;
+            return undefined
 
-        let loc = obj;
+        let loc = obj
 
         for (let i = 0; i < keys.length; i++) {
-            loc = loc[getKey(keys[i])];
+            loc = loc[getKey(keys[i])]
 
             if (loc === undefined)
-                return undefined;
+                return undefined
         }
 
-        return loc;
+        return loc
     },
 
     createPath: (obj, ...keys) => {
         if (obj == null)
             return undefined
 
-        let loc = obj;
+        let loc = obj
 
         for (let i = 0; i < keys.length; i++) {
-            loc[getKey(keys[i])] = {};
+            loc[getKey(keys[i])] = {}
 
             loc = loc[getKey(keys[i])]
         }
