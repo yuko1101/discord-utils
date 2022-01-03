@@ -18,7 +18,7 @@ const client = new Client({
 });
 
 const utils = require("discord-utils");
-const utilsClient = new utils.Client(client, ["!", "?"]); // (bot_client, prefixes, debug_guild_id?)
+const utilsClient = new utils.Client(client, ["!", "?"]); // (bot_client, prefixes, guildId?, debugMode?)
 
 utilsClient.registerCommandsFromDir("commands") //load commands in "commands" folder
 
