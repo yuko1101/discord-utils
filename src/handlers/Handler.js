@@ -20,6 +20,8 @@ module.exports = {
                 if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd))
                 if (!command) return
 
+                if (command.disableSlashCommand) return
+
                 const msg = interaction
                 msg.slashCommand = true
                 msg.author = interaction.user
@@ -136,6 +138,8 @@ module.exports = {
                 let command = utilsClient.client.commands.get(cmd)
                 if (!command) command = utilsClient.client.commands.get(utilsClient.client.aliases.get(cmd))
                 if (!command) return
+
+                if (command.disableMessageCommand) return
 
                 const msgObject = msg
                 msgObject.slashCommand = false

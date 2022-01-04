@@ -67,10 +67,10 @@ module.exports = class Client {
         if (this.disableSlashCommands) return
 
         if (this.client.isReady) {
-            registerSlashCommands(this.client, this.registeredCommands, this.guildId, this.debugMode)
+            registerSlashCommands(this.client, this.registeredCommands.filter(command => !command.disableSlashCommand), this.guildId, this.debugMode)
         } else {
             this.client.on("ready", () => {
-                registerSlashCommands(this.client, this.registeredCommands, this.guildId, this.debugMode)
+                registerSlashCommands(this.client, this.registeredCommands.filter(command => !command.disableSlashCommand), this.guildId, this.debugMode)
             })
         }
     }
