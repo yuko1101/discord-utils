@@ -37,7 +37,17 @@ module.exports = {
                         await interaction.deferReply()
                     } catch (error) {
                         console.log(error)
-                        await msg.channel.send("コマンドの実行中に不明なエラーが発生しました\nもう一度お試しください")
+                        const errorMessage = await msg.channel.send("コマンドの実行中に不明なエラーが発生しました\nもう一度お試しください")
+                        setTimeout(async () => {
+                            if (errorMessage && errorMessage.deletable) {
+                                try {
+                                    await errorMessage.delete()
+                                } catch (err) {
+                                    console.log(err)
+                                }
+                            }
+
+                        }, 3000);
                         return
                     }
                     console.timeEnd("Command Reply")
@@ -54,7 +64,17 @@ module.exports = {
                         await interaction.reply(data)
                     } catch (error) {
                         console.log(error)
-                        await msg.channel.send("コマンドの実行中に不明なエラーが発生しました\nもう一度お試しください")
+                        const errorMessage = await msg.channel.send("コマンドの実行中に不明なエラーが発生しました\nもう一度お試しください")
+                        setTimeout(async () => {
+                            if (errorMessage && errorMessage.deletable) {
+                                try {
+                                    await errorMessage.delete()
+                                } catch (err) {
+                                    console.log(err)
+                                }
+                            }
+
+                        }, 3000);
                         return
                     }
                     console.timeEnd("Command Reply")
