@@ -34,6 +34,7 @@ Creating a command file for both a Message Command and a Slash Command
 
 ``` js
 const { Reaction } = require("discord-utils");
+const { Message, Client } = require("discord.js");
 
 module.exports = {
     name: "reply", //command name
@@ -46,9 +47,19 @@ module.exports = {
             type: 3 //string
         }
     ],
+    /**
+     * @param {Message} msg 
+     * @param {*} args
+     * @param {Client} client 
+     */
     run: async (msg, args, client) => {
         return { content: "replying..." }; //send message to the channel
     },
+    /**
+     * @param {Message} msg 
+     * @param {*} args
+     * @param {Client} client 
+     */
     runAfter: async (msg, sent, args, client) => {
         setTimeout(async () => {
             await sent.edit({ content: args["reply_text"] }); //edit to reply_text
