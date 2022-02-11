@@ -82,6 +82,10 @@ module.exports = {
                 //if you return ephemeral message in Command run function, runAfter won't be triggered
                 if ((callback || { ephemeral: false }).ephemeral) return
                 const interactionMessage = await getInteractionMessage(interaction, utilsClient.application_id)
+                if (!interactionMessage) {
+                    console.error("interactionMessageが取得できませんでした")
+                    return
+                }
                 if (callback === undefined) {
                     interactionMessage.edit = async (data) => {
                         await interaction.editReply(data)
@@ -180,7 +184,11 @@ module.exports = {
 async function getInteractionMessage(interaction, application_id) {
     return await fetch(`https://discord.com/api/v8/webhooks/${application_id}/${interaction.token}/messages/@original`).then(res => res.json()).then(async res => {
         console.log(res)
-        return await interaction.channel.messages.fetch(res.id)
+        try {
+            return await interaction.channel.messages.fetch(res.id)
+        } catch (e) {
+            return null
+        }
     })
 }
 
